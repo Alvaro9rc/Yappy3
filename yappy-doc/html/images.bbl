@@ -1,0 +1,29 @@
+\begin{thebibliography}{HMU00}
+
+\bibitem[ASU86]{aho86:_compil}
+Alfred~V. Aho, Ravi Sethi, and Jeffrey~D. Ullman.
+\newblock {\em Compilers: Principles, Techniques and Tools}.
+\newblock Addison Wesley, 1986.
+
+\bibitem[GJ90]{grune90:_parsin_techn_pract_guide}
+Dick Grune and Ceriel~J.H. Jacobs.
+\newblock {\em Parsing Techniques - A Practical Guide}.
+\newblock Prentice Hall, 1990.
+\newblock Available for downloading in PostScript format.
+
+\bibitem[HMU00]{hopcroft00:_introd_autom_theor_languag_comput}
+John~E. Hopcroft, Rajeev Motwani, and Jeffrey~D. Ullman.
+\newblock {\em Introduction to Automata Theory, Languages and Computation}.
+\newblock Addison Wesley, 2nd edition, 2000.
+
+\bibitem[Lut96]{lutz96:_progr_python}
+M.~Lutz.
+\newblock {\em Programming Python}.
+\newblock O'Reilly \& Associates, 1996.
+
+\bibitem[rs00]{watters00:_parse_gener_python}
+Aaron~Watte rs.
+\newblock {\em Parse Generation in Python}.
+\newblock New Jersey Institute of Technology, 2000.
+
+\end{thebibliography}

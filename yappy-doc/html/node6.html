@@ -1,0 +1,549 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Documentation</TITLE>
+<META NAME="description" CONTENT="Documentation">
+<META NAME="keywords" CONTENT="yappyDoc">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="pub.css">
+
+<LINK REL="next" HREF="node7.html">
+<LINK REL="previous" HREF="node5.html">
+<LINK REL="up" HREF="yappyDoc.html">
+<LINK REL="next" HREF="node7.html">
+</HEAD>
+
+<BODY BGCOLOR="#FFFFF0" TEXT="DARKBLUE" LINK="RED" VLINK="DARKRED"
+  ALINK="#FF0000" ALINK="YELLOW">
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html111"
+  HREF="node7.html">
+<IMG WIDTH="30" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.gif"></A> 
+<A NAME="tex2html109"
+  HREF="yappyDoc.html">
+<IMG WIDTH="30" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.gif"></A> 
+<A NAME="tex2html103"
+  HREF="node5.html">
+<IMG WIDTH="30" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.gif"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html112"
+  HREF="node7.html">Related projects</A>
+<B> Up:</B> <A NAME="tex2html110"
+  HREF="yappyDoc.html">Yappy Yet another LR(1)</A>
+<B> Previous:</B> <A NAME="tex2html104"
+  HREF="node5.html">What's new</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00060000000000000000">
+Documentation</A>
+</H1>
+
+<P>
+The <TT>Yappy</TT> api documentation can be found
+<A NAME="tex2html20"
+  HREF="yappyDoc/index.html">here</A>
+<P>
+Some simple demo parsers can be found in the file 
+<TT>demo.py</TT> in the
+examples directory (for instance
+<TT>/usr/share/doc/python2.2/examples</TT>).
+
+<P>
+<BR>
+<PRE  CLASS="verbatim"># -*- coding: utf-8 -*-
+#
+# 
+# This is part of Yappy
+#
+#
+# demo.py -- some simple parsers
+#
+# Copyright (C) 2000-2003 RogÃ©rio Reis &amp; Nelma Moreira {rvr,nam}@ncc.up.pt
+#
+
+#from yappy.parser import *
+import sys, string
+from yappy.parser import *
+############## Demos  #####################
+
+class SimpleExp(Yappy):
+    """ A parser  for simple arithmetic expresssion. Allows blanks
+    between tokens"""
+    def __init__(self,no_table=0, table='saexp.tab'):
+        grammar = grules([
+                ("E -&gt; E + T", self.Add),
+                ("E -&gt;T", DefaultSemRule),
+                ("T -&gt; T * F", self.Mul ),
+                ("T -&gt; F", DefaultSemRule),
+                ("F -&gt; ( E )", self.ParSemRule),
+                ("F -&gt; id", DefaultSemRule)]
+                         )
+        tokenize=[("\s+",""),
+               ("\d+",lambda x: ("id",int(x))),
+               ("\+",lambda x: (x,x)),
+               ("\*",lambda x: (x,x)),
+               ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table,
+    tmpdir='/tmp')
+        
+    
+    def ParSemRule(self,list,context=None):
+        return list[1]
+
+    def DoPrint(self,list,context=None):
+        print list[0]
+        return list[0]
+
+    def Add(self,list,context):
+        print list
+        return list[0] + list[2]
+
+    def Mul(self,list,context):
+        print list
+        return list[0] * list[2]
+
+    def test(self):
+        st = " 2 + 24 + 34 * 2 + 1"
+        print "Input: %s" %st
+        print "Result:", self.input(st)   
+
+class SimpleExp3(SimpleExp):
+    """ A parser  for simple arithmetic expresssion. Allows blanks
+    between tokens"""
+    def __init__(self,no_table=0, table='saexp.tab'):
+        grammar = """ 
+                E -&gt; E + T {{ "sum([$0,$2])"}};
+                E -&gt;T ;
+                T -&gt; T * F" {{ self.Mul }};
+                T -&gt; F ;
+                F -&gt; ( E ) {{ self.ParSemRule}};
+                F -&gt; id;
+                """
+        tokenize=[("\s+",""),
+               ("\d+",lambda x: ("id",int(x))),
+               ("\+",lambda x: (x,x)),
+               ("\*",lambda x: (x,x)),
+               ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table)
+        
+class SimpleExp1(Yappy):
+    """ A parser  for simple arithmetic expresssions, with operators """
+    def __init__(self,no_table=0, table='saexp1.tab', tabletype=LALRtable,noconflicts=1,expect=0):
+        grammar = grules([
+                ("E -&gt; E add_op T", self.Add),
+                ("E -&gt;T", DefaultSemRule),
+                ("T -&gt; T mul_op F", self.Mul),
+                ("T -&gt; F", DefaultSemRule),
+                ("F -&gt; ( E )", self.ParSemRule),
+                ("F -&gt; id", DefaultSemRule)])
+
+        tokenize=[("\d+",lambda x: ("id",int(x))),
+               ("[+-]",lambda x: ("add_op",self.make_op(x))),
+               ("[*/]",lambda x: ("mul_op",self.make_op(x))),
+               ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table,tabletype,noconflicts,expect)
+
+    def make_op(self,op):
+        return {"+"  : operator.add,
+		'-'  : operator.sub,
+                '*'   : operator.mul,
+                '/'   : operator.div,
+                '%'   : operator.mod
+                }[op]
+    
+    def ParSemRule(self,list,context=None):
+        return list[1]
+
+    def DoPrint(self,list,context=None):
+        print list[0]
+        return list[0]
+
+    def Add(self,list,context):
+        print list
+        return apply(list[1],[list[0],list[2]])
+
+    def Mul(self,list,context):
+        print list
+        return apply(list[1],[list[0],list[2]])
+
+    def test(self):
+        st = "2-24*9"
+        st1 = "2-24*9-34*2+1"
+        print "Input: %s" %st
+        print "Result:", self.input(st)
+
+
+class SimpleExp2(SimpleExp1):
+    """ A parser  for simple arithmetic expresssions with prec and associativity"""
+    def __init__(self,no_table=0, table='saexp2.tab',
+    tabletype=LALRtable,noconflicts=1,expect=0):
+        self.line = 0
+        grammar = grules([
+                ("E -&gt; E add_op T", self.Add),
+                ("E -&gt;T", DefaultSemRule),
+                ("T -&gt; T mul_op F", self.Mul),
+                ("T -&gt; F", DefaultSemRule),
+                ("F -&gt; ( E )", self.ParSemRule),
+                ("F -&gt; id", DefaultSemRule)])
+
+        tokenize=[("\d+",lambda x: ("id",int(x))),
+                  ("\n+",lambda x: (x,self.countline())),
+               ("[+-]",lambda x: ("add_op",self.make_op(x)),("add_op",100,'left')),
+               ("[*/]",lambda x: ("mul_op",self.make_op(x)),("mul_op",200,'left')),
+               ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table,tabletype,noconflicts,expect)
+        
+
+    def countline(self):
+        self.line+=1
+        return ""
+    
+    def make_op(self,op):
+        """ """
+        return {"+"  : operator.add,
+		'-'  : operator.sub,
+                '*'   : operator.mul,
+                '/'   : operator.div,
+                '%'   : operator.mod
+                }[op]
+    
+    def ParSemRule(self,list,context=None):
+        return list[1]
+
+    def DoPrint(self,list,context=None):
+        print list[0]
+        return list[0]
+
+    def Add(self,list,context):
+        print list
+        return apply(list[1],[list[0],list[2]])
+
+    def Mul(self,list,context):
+        print list
+        return apply(list[1],[list[0],list[2]])
+
+class SimpleExpAmb(SimpleExp2):
+    """A parser  for simple arithmetic expresssions with an ambiguous grammar """
+    def __init__(self,no_table=0, table='expamb.tab',tabletype=LALRtable,noconflicts=1,expect=0):
+        grammar = grules([
+                ("E -&gt; E add_op E", self.Add),
+                ("E -&gt; E mul_op E", self.Mul),
+                ("E -&gt; ( E )", self.ParSemRule),
+                ("E -&gt; id", DefaultSemRule)])
+
+        sinal = "[+-]"
+        integer ="\d" 
+        tokenize=[("(%s)+"%integer,lambda x: ("id",int(x))),
+               (sinal,lambda x: ("add_op",self.make_op(x)),("add_op",100,'left')),
+               ("[*/]",lambda x: ("mul_op",self.make_op(x)),("mul_op",200,'left')),
+               ("\(|\)",lambda x: (x,x)) ]
+
+        Yappy.__init__(self,tokenize,grammar,table,no_table,tabletype,noconflicts,expect)
+
+
+class SimpleExpAmb2(SimpleExp2):
+    """A parser  for simple arithmetic expresssions with an ambiguous
+    grammar, and context-dependent precedence """
+    def __init__(self,no_table=0, table='expamb.tab',tabletype=LALRtable,noconflicts=1,expect=0):
+        grammar = grules([
+                ("E -&gt; E add_op E", self.Add),
+                ("E -&gt; E mul_op E", self.Mul),
+                ("E -&gt; n_op E", lambda l,c: -1*l[1]),
+                ("E -&gt; ( E )", self.ParSemRule),
+                
+                ("E -&gt; id", DefaultSemRule)])
+
+        plus = "[+-]"
+        integer = "\d" 
+        tokenize=[("(%s)+"%integer,lambda x: ("id",int(x))),
+               ("%s"%plus,lambda x:
+                ("add_op",self.make_op(x)),("add_op",100,'left')),
+                ("~",lambda x: ("n_op",self.make_op('-')),("n_op",300,'left')),
+               ("[*/]",lambda x: ("mul_op",self.make_op(x)),("mul_op",200,'left')),
+               ("\(|\)",lambda x: (x,x)) ]
+
+        Yappy.__init__(self,tokenize,grammar,table,no_table,tabletype,noconflicts,expect)
+    def test(self):
+        st=[
+         "~2",
+        "2-24*9",
+        "2-24*9-34*2+1",
+        "~2-24*9-34*2+1",
+         "2+3+(~5*(2+3)*2)-24*9-34*2+1"
+         ]
+        for i in st:
+            print "Input: %s" %i
+            print "Result:", self.input(i)
+
+
+class ListAVG(Yappy):
+    """A parser  for transforming a list atrib=value into a python dictionary """
+    def __init__(self,no_table=0, table='Listavg.tab'):
+        grammar =   """
+            E -&gt; ( ) {{self.EmptyDict}};
+            E -&gt;  ( AVL ) {{self.ParSemRule}} ;
+            AVL -&gt;   AV , AVL  | AV {{EmptySemRule}} ;
+            AV -&gt; tok = tok {{ self.AddItem }};
+            """
+    
+        tokenize = [
+             ("\s+",""),
+             ("[A-Za-z0-9]+",lambda x: ("tok",x)),
+             ("\=",lambda x: (x,x)),
+             (",",lambda x: (x,x)),
+             ("\(|\)",lambda x: (x,x)) ]
+
+        Yappy.__init__(self,tokenize,grammar,table,no_table)
+
+
+    def ParSemRule(self,list,context=None):
+        return list[1]
+
+    def DoPrint(self,list,context=None):
+        print list[0]
+        return list[0]
+
+
+    def EmptyDict(self,list,context):
+        return []
+
+    def AddItem(self,list,context):
+        if not isinstance(list[0], StringType):
+            raise NameError, "Key %s must be a string" % list[0] 
+        context[list[0]] = list[2] 
+        return []
+
+    def test(self):
+        st = "(a=5,b=6,c=7)"
+        print "Input: %s" %st      
+        self.input(st,context={})
+        print self.context
+
+class ListAVG1(ListAVG):
+    """A parser  for transforming a list atrib=value into a python dictionary """
+    def __init__(self,no_table=0, table='Listavg1.tab'):
+        grammar =   """
+            E -&gt; ( ) {{self.EmptyDict}};
+            E -&gt; ( AVL ) {{self.ParSemRule}} ;
+            AVL -&gt;   AV , AVL   | AV {{EmptySemRule}} ;
+            AV -&gt; tok = tok {{ self.AddItem }};
+            """
+        tokenize = [
+             ("\s+",""),
+             ("[A-Za-z0-9]+",lambda x: ("tok",x)),
+             ("\=",lambda x: (x,x)),
+             (",",lambda x: (x,x)),
+             ("\(|\)",lambda x: (x,x)) ]
+
+        Yappy.__init__(self,tokenize,grammar,table,no_table)
+        
+class ListAVG2(ListAVG):
+    """A parser  for transforming a list atrib=value into a python dictionary """
+    def __init__(self,no_table=0, table='Listavg1.tab'):
+        grammar =   """
+            E -&gt; ( AVL ) {{self.ParSemRule}} ;
+            AVL -&gt;   AV , AVL  {{DefaultSemRule}} | ;
+            AV -&gt; tok = tok {{ self.AddItem }};
+            """
+        tokenize = [
+             ("\s+",""),
+             ("[A-Za-z0-9]+",lambda x: ("tok",x)),
+             ("\=",lambda x: (x,x)),
+             (",",lambda x: (x,x)),
+             ("\(|\)",lambda x: (x,x)) ]
+
+        Yappy.__init__(self,tokenize,grammar,table,no_table)
+
+
+    def test(self):
+        st = "(a=5,b=6,c=7,)"
+        
+        print "Input: %s" %st      
+        self.input(st,context={})
+        print self.context
+
+        
+class RegExp(Yappy):
+     def __init__(self,no_table=0, table='regamb.tab',
+     tabletype=LALRtable,
+                  noconflicts=1,expect=0):
+        """ A parser for regular expressions with operators. Semantic
+     rules are dummy..."""
+        grammar = grules([("r -&gt; r | r",self.OrSemRule),
+                        ("r -&gt; r . r",self.ConcatSemRule),
+                    ("r -&gt; r *",self.StarSemRule, (300,'left')),
+                    ("r -&gt; ( r )",self.ParSemRule),
+                    ("r -&gt; id",self.BaseSemRule),
+                   ])
+        tokenize =[
+                    ("[A-Za-z0-9]",lambda x: ("id",x)),
+                    ("[+|]",lambda x: ("|",x),("|",100,'left')),
+                    ("[\.]",lambda x: (".",""),(".",200,'left')),
+                    ("[*]",lambda x: (x,x), ("*",300,'left')),
+                    ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table,tabletype)
+
+     ##Semantic rules build a parse tree...
+     def OrSemRule(self,list,context):
+         return "(%s+%s)" %(list[0],list[2])
+
+     def ConcatSemRule(self,list,context):
+         return "(%s%s)" %(list[0],list[2])
+
+     def ParSemRule(self,list,context):
+         return "(%s)" %list[1]
+
+     def BaseSemRule(self,list,context):
+         return list[0]
+
+     def StarSemRule(self,list,context):
+         return "(%s*)" %list[0]
+
+     def test(self):
+         st  = ["(a+b)*.a.a.b*",
+                "a+a.b+a.b.(a+a)*",
+                "a+a.b+a.(a+a)**",
+                 "a+a.b.c",
+                "a+a.b.(c+b)",
+                "a+a.b.(c+b)*",
+                 "a+a.b*.(a+b)"]
+         for i in st:
+             print "Input: %s" %i
+             print self.input(i)
+
+class RegExp1(RegExp):
+     def __init__(self,no_table=0, table='tableambreg1',tabletype=LALRtable,
+                  noconflicts=1,expect=0):
+        """A parser for regular expressions with ambiguous rules  """
+        grammar = grules([("reg -&gt; reg + reg",self.OrSemRule),
+                                ("reg -&gt; reg reg",self.ConcatSemRule,(200,'left')),
+                               ("reg -&gt; reg *",self.StarSemRule),
+                               ("reg -&gt; ( reg )",self.ParSemRule),
+                               ("reg -&gt; id",self.BaseSemRule)
+                   ])
+        tokenize =[
+                    ("[A-Za-z0-9]",lambda x: ("id",x)),
+                    ("[+|]",lambda x: ("+",x),("+",100,'left')),
+                    ("[*]",lambda x: (x,x)),
+                    ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table,tabletype,noconflicts,expect)
+        
+     def ConcatSemRule(self,list,context=None):
+         return "(%s%s)" %(list[0],list[1])
+
+
+     def test(self):
+         st  = ["(a+b)*aab*",
+                "(a+ab)*a*",
+                "(a+a)a+ab",
+                "a+ab+(a(a+a)*)*",
+                "a+ab+a(a+a)**",
+                "(a+a)**ab(a+b)**",
+                "aa+bb**",
+                "(a+ab)(a+ab)(ac+a)",
+                "a+abc+ad",
+                "abc+b+ad",
+                "a+ab",
+                "a+b+ab+cccaaaaaa",
+                "a+ab(a+a)",
+                "ab+ab(a+a)a*",
+                "a+ab*",
+                "(a+ab*(a+b))*",
+                "a+ab*(a+b)",
+                "a+c+ab(a+b)",
+                "a+c+(a+b)ab",
+                "a+b*",
+                "aa+b*",
+                "aab*ab+a*+aa",
+                "aab*ab**+(a+aa)**"
+                ]
+         for i in st:
+             print "Input: %s" %i
+             print self.input(i)
+
+
+class RegExp2(RegExp1):
+     def __init__(self,no_table=0, table='tableambreg2'):
+         grammar = """
+        reg -&gt; reg + reg {{ self.OrSemRule }} |
+               reg reg {{ self.ConcatSemRule}} // 200 left|
+               reg * {{ self.StarSemRule }} |
+               ( reg ) {{self.ParSemRule }} |
+               id {{ self.BaseSemRule }} ;
+        """
+         tokenize = [("@epsilon",lambda x: ("id",x)),
+                    ("@empty_set",lambda x: ("id",x)),
+                    ("[A-Za-z0-9]",lambda x: ("id",x)),
+                    ("[+|]",lambda x: ("+",x),("+",100,'left')),
+                    ("[*]",lambda x: (x,x)),
+                    ("\(|\)",lambda x: (x,x)) ]
+
+         Yappy.__init__(self,tokenize,grammar,table,no_table)
+
+class RegExp3(RegExp):
+     def __init__(self,no_table=0, table='tableambreg3'):
+        """A erronous parser for regular expressions with ambiguous rules and
+     no precedence information """
+        grammar = grules([("reg -&gt; reg | reg",self.OrSemRule),
+                                ("reg -&gt; reg reg",self.ConcatSemRule),
+                               ("reg -&gt; reg *",self.StarSemRule),
+                               ("reg -&gt; ( reg )",self.ParSemRule),
+                               ("reg -&gt; id",self.BaseSemRule),
+                   ])
+        tokenize =[
+                    ("[A-Za-z0-9]",lambda x: ("id",x)),
+                    ("[+|]",lambda x: ("|",x)),
+                    ("[*]",lambda x: (x,x)),
+                    ("\(|\)",lambda x: (x,x)) ]
+        Yappy.__init__(self,tokenize,grammar,table,no_table,LALRtable,1)
+        
+     def ConcatSemRule(self,list,context=None):
+         return list[0]+list[1]
+
+     def test(self):
+         st  = "(a+b)*aab*"
+         print "Input: %s" %st
+         print self.input(st)
+        
+def Sum(a,b):
+    return a+b
+
+def curry(f,*a,**kw):
+    def curried(*more_a,**more_kw):
+        return f(*(a+more_a),**dict(kw,**more_kw))
+    return curried
+
+if __name__ == '__main__':
+    d = SimpleExpAmb()
+    st = "2-24*9"
+    print "Input:", st
+    print "Result:", d.input(st)
+    st = "2-24*9-34*2+1"
+    print "Input:", st
+    print "Result:", d.input(st)
+    d = RegExp2()
+    print "Result:", d.input("a+b*")
+</PRE>
+<P>
+<BR><HR>
+<ADDRESS>
+<a href="http://www.ncc.up.pt/~nam">Nelma Moreira</a>, <a
+href="http://www.ncc.up.pt/~rvr">Rogério Reis</a> <I>2010-06-10</I>
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "yappy3"
+version = "0.1.0"
+description = "Biblioteca yappy convertida a python3. Yappy proporciona un analizador léxico y un generador parser LR para aplicaciones en python."
+authors = ["Alvaro9rc <arc1004@alu.ubu.es>"]
+license = "GNU"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
