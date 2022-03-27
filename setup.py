@@ -14,7 +14,7 @@ setup(
     author_email='alvaro9rocar@gmail.com',
     # use the URL to the github repo
     url='https://github.com/Alvaro9rc/Yappy3',
-    download_url='https://github.com/nelsonher019/nelsonsaludo/tarball/0.1',
+    download_url='https://github.com/Alvaro9rc/Yappy3/releases/tag/0.2',
     keywords=['parser', 'yappy'],
     classifiers=[ ],
     license='GNU',
